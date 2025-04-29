@@ -53,7 +53,7 @@ def generate_launch_description():
                 executable='rviz2',
                 name='rviz2',
                 arguments=[
-                    '-d', [os.path.join(rviz_dir, 'laser_map.rviz')]],
+                    '-d', [os.path.join(rviz_dir, 'fourwheel.rviz')]],
                 output='screen')
     
     start_nav_cmd = IncludeLaunchDescription(

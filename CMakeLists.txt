@@ -24,7 +24,7 @@ if(BUILD_TESTING)
 endif()
 
 install(
-  DIRECTORY launch meshes urdf params rviz
+  DIRECTORY launch meshes urdf params rviz worlds
   DESTINATION share/${PROJECT_NAME}
 )
 ament_package()
