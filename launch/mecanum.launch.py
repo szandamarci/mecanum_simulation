@@ -1,4 +1,5 @@
 import os
+import launch
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
@@ -16,6 +17,10 @@ def generate_launch_description():
     rviz_dir = os.path.join(local_dir, 'rviz')
     xacro_file = os.path.join(local_dir, 'urdf/mecanum.xacro')
     description_raw = xacro.process_file(xacro_file).toxml()
+    joy_config = launch.substitutions.LaunchConfiguration('joy_config')
+    joy_dev = launch.substitutions.LaunchConfiguration('joy_dev')
+    publish_stamped_twist = launch.substitutions.LaunchConfiguration('publish_stamped_twist')
+    config_filepath = launch.substitutions.LaunchConfiguration('config_filepath')
 
     # urdf_file = os.path.join(local_dir, 'urdf/mecanum.urdf')
     # with open(urdf_file, 'r') as infp:
@@ -112,7 +117,35 @@ def generate_launch_description():
             }.items()
     )
 
+    joy = Node(package ='joy',
+               executable='joy_node',
+               name='joy_node',
+               parameters=[
+                   {
+                       'device_id': joy_dev,
+                       'deadzone': 0.3,
+                       'autorepeat_rate': 20.0,
+                   }
+               ]
+    )
 
+    teleop = Node(package= 'teleop_twist_joy',
+                namespace='',
+                executable='teleop_node',
+                name='teleop_twist_joy_node',
+                parameters=[config_filepath, {'publish_stamped_twist': publish_stamped_twist}],
+                remappings={('/cmd_vel', launch.substitutions.LaunchConfiguration('joy_vel'))}
+                )
+
+    declare_joy_vel = DeclareLaunchArgument('joy_vel', default_value='cmd_vel')
+    declare_joy_config = DeclareLaunchArgument('joy_config', default_value='xbox')
+    declare_joy_dev = DeclareLaunchArgument('joy_dev', default_value='0')
+    declare_publish_stamped_twist = DeclareLaunchArgument('publish_stamped_twist', default_value='false')
+    declare_config_filepath = DeclareLaunchArgument('config_filepath', default_value=[
+        launch.substitutions.TextSubstitution(text=os.path.join(
+            get_package_share_directory('teleop_twist_joy'), 'config', '')),
+            joy_config, launch.substitutions.TextSubstitution(text='.config.yaml')])
+    
     return LaunchDescription([
         
         declare_gui_cmd,
@@ -120,13 +153,20 @@ def generate_launch_description():
         declare_map_yaml_cmd,
         declare_params_file_cmd,
         declare_slam_cmd,
+        declare_joy_vel,
+        declare_joy_config,
+        declare_joy_dev,
+        declare_publish_stamped_twist,
+        declare_config_filepath,
         gzserver,
         gui,
         spawn_entity,
         robot_state_publisher,
         joint_state_publisher, 
         rviz,
-        start_nav_cmd
+        start_nav_cmd,
+        joy, 
+        teleop
 
     ])
 

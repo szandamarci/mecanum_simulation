@@ -194,7 +194,7 @@
 <material>Gazebo/Blue</material>
     <sensor name="lidar_sensor" type="ray">
         <pose>0 0 0 0 0 0</pose>
-        <visualize>true</visualize>
+        <visualize>false</visualize>
         <update_rate>10</update_rate>
         <ray>
             <scan>
@@ -255,43 +255,47 @@
 
 </gazebo>
 <gazebo reference="front_right_wheel">
-    <mu1>0.5</mu1>
-    <mu2>0.5</mu2>
+    <mu1>10.0</mu1>
+    <mu2>0.0</mu2>
+    <!-- <fdir1> 1 1 0</fdir1> -->
     <kp>500000.0</kp>
     <kd>10.0</kd>
     <maxVel>0.5</maxVel>
     <minDepth>0.001</minDepth>
-    <fdir1>1 0 0</fdir1>
+    
     <material>Gazebo/Black</material>
 </gazebo>
 <gazebo reference="front_left_wheel">
-    <mu1>0.5</mu1>
-    <mu2>0.5</mu2>
+    <mu1>10.0</mu1>
+    <mu2>0</mu2>
+    <!-- <fdir1> -1 1 0</fdir1> -->
     <kp>500000.0</kp>
     <kd>10.0</kd>
     <maxVel>0.5</maxVel>
     <minDepth>0.001</minDepth>
-    <fdir1>1 0 0</fdir1>
+    
     <material>Gazebo/Black</material>
   </gazebo>
   <gazebo reference="rear_right_wheel">
-    <mu1>0.5</mu1>
-    <mu2>0.5</mu2>
+    <mu1>10.0</mu1>
+    <mu2>0.0</mu2>
+    <!-- <fdir1> -1 1 0</fdir1> -->
     <kp>500000.0</kp>
     <kd>10.0</kd>
     <maxVel>0.5</maxVel>
     <minDepth>0.001</minDepth>
-    <fdir1>1 0 0</fdir1>
+    
     <material>Gazebo/Black</material>
   </gazebo>
   <gazebo reference="rear_left_wheel">
-    <mu1>0.5</mu1>
-    <mu2>0.5</mu2>
+    <mu1>10.0</mu1>
+    <mu2>0.0</mu2>
+    <fdir1> 1 0 0</fdir1>
     <kp>500000.0</kp>
     <kd>10.0</kd>
     <maxVel>0.5</maxVel>
     <minDepth>0.001</minDepth>
-    <fdir1>1 0 0</fdir1>
+    
     <material>Gazebo/Black</material>
   </gazebo>
   <gazebo reference="base_link">
