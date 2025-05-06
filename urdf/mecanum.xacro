@@ -192,11 +192,10 @@
 
 <gazebo reference="base_scan">
 <material>Gazebo/Blue</material>
-    <sensor name="lidar_sensor" type="ray">
-        <pose>0 0 0 0 0 0</pose>
-        <visualize>false</visualize>
+    <sensor name="gpu_sensor" type="gpu_lidar">
+        <topic>scan</topic>
         <update_rate>10</update_rate>
-        <ray>
+        <lidar>
             <scan>
                 <horizontal>
                     <samples>500</samples>
@@ -215,8 +214,11 @@
                 <mean>0.0</mean>
                 <stddev>0.02</stddev>
             </noise>
-        </ray>
-        <plugin filename="libgazebo_ros_ray_sensor.so" name="lidar_controller">
+            <frame_id>base_footprint</frame_id>
+        </lidar>
+        <always_on>1</always_on>
+        <visualize>true</visualize>
+        <!-- <plugin filename="libignition-gazebo-sensors-system" name="ignition::gazebo::systems::Sensors">
             <frame_name>base_scan</frame_name>
             <ros>
                 <namespace>/</namespace>
@@ -224,7 +226,13 @@
             </ros>
             <output_type>sensor_msgs/LaserScan</output_type>
             <min_intensity>0.0</min_intensity>
-        </plugin>
+            <render_engine>ogre2</render_engine>
+        </plugin> -->
+        <plugin
+            filename="ignition-gazebo-sensors-system"
+            name="ignition::gazebo::systems::Lidar">
+      <render_engine>ogre2</render_engine>
+    </plugin>
     </sensor>
 </gazebo>
 <gazebo>

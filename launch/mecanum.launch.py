@@ -30,9 +30,6 @@ def generate_launch_description():
     gazebo_models_path, ignore_last_dir = os.path.split(local_dir)
     os.environ["GZ_SIM_RESOURCE_PATH"] += os.pathsep + gazebo_models_path
 
-
-    
-
     rviz = Node(package= 'rviz2',
                 namespace='',
                 executable='rviz2',
@@ -140,7 +137,8 @@ def generate_launch_description():
                             "/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist",
                             "/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry",
                             "/joint_states@sensor_msgs/msg/JointState@gz.msgs.Model",
-                            "/tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V"
+                            "/tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V",
+                            "/scan@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan",
                         ],
                         output="screen",
                         parameters=[
