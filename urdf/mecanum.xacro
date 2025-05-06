@@ -198,10 +198,10 @@
         <lidar>
             <scan>
                 <horizontal>
-                    <samples>500</samples>
+                    <samples>1200</samples>
                     <resolution>0.72</resolution>
-                    <min_angle>0.0</min_angle>
-                    <max_angle>6.28319</max_angle>
+                    <min_angle>-4.71</min_angle>
+                    <max_angle>4.71</max_angle>
                 </horizontal>
             </scan>
             <range>
@@ -375,5 +375,3 @@
 
   
 </robot>
-
-
