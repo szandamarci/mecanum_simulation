@@ -4,16 +4,16 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, Command
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 import xacro
 
 def generate_launch_description():
-    package_name = 'mecanum_custom'
+    package_name = 'mecanum_simulation'
     bringup_dir = get_package_share_directory('nav2_bringup')
     local_dir = get_package_share_directory(package_name)
-    world_file = os.path.join(local_dir, 'worlds/plain.world')
+    world_file = os.path.join(local_dir, 'worlds/empty.sdf')
     rviz_dir = os.path.join(local_dir, 'rviz')
     xacro_file = os.path.join(local_dir, 'urdf/mecanum.xacro')
     description_raw = xacro.process_file(xacro_file).toxml()
@@ -22,35 +22,15 @@ def generate_launch_description():
     publish_stamped_twist = launch.substitutions.LaunchConfiguration('publish_stamped_twist')
     config_filepath = launch.substitutions.LaunchConfiguration('config_filepath')
 
-    # urdf_file = os.path.join(local_dir, 'urdf/mecanum.urdf')
-    # with open(urdf_file, 'r') as infp:
-    #     description_raw = infp.read()
-
     map_file = LaunchConfiguration('map')
     params_file = LaunchConfiguration('params_file')
     slam = LaunchConfiguration('slam')
     use_sim_time = LaunchConfiguration('use_sim_time', default='True')
 
-    spawn_entity = Node(package= 'gazebo_ros',
-                        executable='spawn_entity.py',
-                        arguments=[
-                            '-topic', 'robot_description',
-                            '-entity', 'my_bot'],
-                        output='screen')
+    gazebo_models_path, ignore_last_dir = os.path.split(local_dir)
+    os.environ["GZ_SIM_RESOURCE_PATH"] += os.pathsep + gazebo_models_path
 
-    robot_state_publisher = Node(package= 'robot_state_publisher',
-                        executable='robot_state_publisher',
-                        parameters=[
-                            {'robot_description' : description_raw,
-                             'use_sim_time' : use_sim_time}],
-                        output='screen')
-    
-    joint_state_publisher = Node(package= 'joint_state_publisher',
-                        executable='joint_state_publisher',
-                        parameters=[
-                            {'robot_description' : description_raw,
-                             'use_sim_time' : use_sim_time}],
-                        output='screen')
+
     
 
     rviz = Node(package= 'rviz2',
@@ -89,34 +69,7 @@ def generate_launch_description():
         default_value='True',
         description='Run slam or not'
         )
-    
-    declare_gui_cmd = DeclareLaunchArgument('gui', default_value='true',
-                              description='Run GUI')
-    
-    declare_gzserver_cmd = DeclareLaunchArgument('server', default_value='true',
-                              description='Run gzserver')
-    
-
-    gzserver = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(
-            get_package_share_directory('gazebo_ros'), 'launch', 'gzserver.launch.py')),
-            condition=IfCondition(LaunchConfiguration('server')),
-            launch_arguments={
-                'world' : world_file,
-                'use_sim_time' : 'True'
-            }.items()
-    )
-
-    gui= IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(
-            get_package_share_directory('gazebo_ros'), 'launch', 'gzclient.launch.py')),
-            condition=IfCondition(LaunchConfiguration('gui')),
-            launch_arguments={
-                'world' : world_file,
-                'use_sim_time' : 'True'
-            }.items()
-    )
-
+     
     joy = Node(package ='joy',
                executable='joy_node',
                name='joy_node',
@@ -146,10 +99,55 @@ def generate_launch_description():
             get_package_share_directory('teleop_twist_joy'), 'config', '')),
             joy_config, launch.substitutions.TextSubstitution(text='.config.yaml')])
     
+    world_arg = DeclareLaunchArgument(
+        'world', default_value=world_file
+    )
+
+    world_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(local_dir, 'launch', 'world.launch.py')),
+            launch_arguments={'world': LaunchConfiguration('world')}.items())
+
+    spawn_xacro = Node(package= "ros_gz_sim",
+                        executable="create",
+                        arguments=[
+                            "-name", "my_robot",
+                            "-topic", "robot_description",
+                            "-x", "0.0", "-y", "0.0", "-z", "0.5", "-Y", "0.0"],
+                        output='screen',
+                        parameters=[
+                            {'use_sim_time': True},
+                        ])
+
+    robot_state_publisher_node = Node(
+                        package= 'robot_state_publisher',
+                        executable='robot_state_publisher',
+                        parameters=[
+                            {'robot_description' : description_raw,
+                             'use_sim_time' : use_sim_time}],
+                        output='screen',
+                        remappings=[
+                                ('/tf', 'tf'),
+                                ('/tf_static', 'tf_static')
+
+                        ])
+    
+    gz_bridge_node = Node(
+                        package="ros_gz_bridge",
+                        executable="parameter_bridge",
+                        arguments=[
+                            "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
+                            "/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist",
+                            "/odom@nav_msgs/msg/Odometry@gz.msgs.Odometry",
+                            "/joint_states@sensor_msgs/msg/JointState@gz.msgs.Model",
+                            "/tf@tf2_msgs/msg/TFMessage@gz.msgs.Pose_V"
+                        ],
+                        output="screen",
+                        parameters=[
+                            {'use_sim_time': True},
+                        ])
+    
     return LaunchDescription([
-        
-        declare_gui_cmd,
-        declare_gzserver_cmd,
         declare_map_yaml_cmd,
         declare_params_file_cmd,
         declare_slam_cmd,
@@ -158,11 +156,13 @@ def generate_launch_description():
         declare_joy_dev,
         declare_publish_stamped_twist,
         declare_config_filepath,
-        gzserver,
-        gui,
-        spawn_entity,
-        robot_state_publisher,
-        joint_state_publisher, 
+
+        world_arg,
+        world_launch,
+        spawn_xacro,
+        robot_state_publisher_node,
+        gz_bridge_node,
+
         rviz,
         start_nav_cmd,
         joy, 

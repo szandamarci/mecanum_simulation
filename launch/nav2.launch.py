@@ -29,7 +29,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     # Get the launch directory
     bringup_dir = get_package_share_directory('nav2_bringup') #
-    local_dir = get_package_share_directory('mecanum_custom')
+    local_dir = get_package_share_directory('mecanum_simulation')
     launch_dir = os.path.join(bringup_dir, 'launch')
 
     
